@@ -22,9 +22,10 @@ contract Conference is Destructible, GroupAdmin {
     uint256 public payoutAmount;
     string public encryption;
 
+    bool private paid;
+
     mapping (address => Participant) public participants;
     mapping (uint => address) public participantsIndex;
-    bool private paid;
 
     ////////////////////////////////////////////////////////////////////////////
     // Structs
@@ -162,9 +163,9 @@ contract Conference is Destructible, GroupAdmin {
             address _addr = _addresses[i];
             require(isRegistered(_addr));
             require(!isAttended(_addr));
-            AttendEvent(_addr);
             participants[_addr].attended = true;
             attended++;
+            AttendEvent(_addr);
         }
     }
 
