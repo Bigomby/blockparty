@@ -34,6 +34,7 @@ contract Conference is Destructible, GroupAdmin {
     struct Participant {
         string participantName;
         address addr;
+        address manager;
         bool attended;
         bool paid;
     }
@@ -93,21 +94,26 @@ contract Conference is Destructible, GroupAdmin {
         }
     }
 
-    function registerWithEncryption(string _participant, string _encrypted)
+    function registerWithEncryption(address _addr, string _name, string _encrypted)
     external payable onlyActive {
-        registerInternal(_participant);
-        RegisterEvent(msg.sender, _participant, _encrypted);
+        registerInternal(_addr, _name);
+        RegisterEvent(_addr, _name, _encrypted);
     }
 
-    function register(string _participant) external payable onlyActive {
-        registerInternal(_participant);
-        RegisterEvent(msg.sender, _participant, "");
+    function register(address _addr, string _name)
+    external payable onlyActive {
+        registerInternal(_addr, _name);
+        RegisterEvent(_addr, _name, "");
     }
 
-    function withdraw() external onlyEnded {
+    function withdraw(address _addr) external onlyEnded {
         require(payoutAmount > 0);
-        Participant storage participant = participants[msg.sender];
-        require(participant.addr == msg.sender);
+
+        Participant storage participant = participants[_addr];
+        require(
+            participant.addr == msg.sender ||
+            participant.manager == msg.sender
+        );
         require(cancelled || participant.attended);
         require(participant.paid == false);
 
@@ -134,6 +140,7 @@ contract Conference is Destructible, GroupAdmin {
     function clear() external onlyOwner onlyEnded {
         require(now > endedAt + coolingPeriod);
         require(ended);
+
         uint256 leftOver = totalBalance();
         owner.transfer(leftOver);
         ClearEvent(owner, leftOver);
@@ -181,17 +188,17 @@ contract Conference is Destructible, GroupAdmin {
     }
 
     ////////////////////////////////////////////////////////////////////////////
-    // internal functions
+    // Internal functions
     ////////////////////////////////////////////////////////////////////////////
 
-    function registerInternal(string _participant) internal {
+    function registerInternal(address _addr, string _name) internal {
         require(msg.value == deposit);
         require(registered < limitOfParticipants);
-        require(!isRegistered(msg.sender));
+        require(!isRegistered(_addr));
 
         registered++;
-        participantsIndex[registered] = msg.sender;
-        participants[msg.sender] =
-            Participant(_participant, msg.sender, false, false);
+        participantsIndex[registered] = _addr;
+        participants[_addr] =
+            Participant(_name, _addr, msg.sender, false, false);
     }
 }
