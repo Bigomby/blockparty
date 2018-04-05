@@ -1,9 +1,5 @@
 <h2>What is this?</h2>
 
-<h3>Demo</h3>
-
-[![Demo Video](./blockparty.gif)](https://www.youtube.com/watch?v=Tlt7oflkGng)
-
 <p>
   Have you ever encountered free party or meetup and realised that half the people registered did not actually turn up?
   BlockParty solves this problem by providing a simple incentive for people to register only if they mean it.
@@ -90,20 +86,20 @@ If you are interested in contributing to blockparty, have a look into ["help wan
 
 ### Prerequisite
 
-- [geth](https://github.com/ethereum/go-ethereum/wiki/geth)
-- [nodejs](https://nodejs.org/en/)
-- [npm](https://www.npmjs.com/)
-- [webpack](https://webpack.github.io/)
-- [ganache-cli](https://github.com/trufflesuite/ganache-cli) = v6.0.3 (ganache-core: 2.0.2) for local use
+* [geth](https://github.com/ethereum/go-ethereum/wiki/geth)
+* [nodejs](https://nodejs.org/en/)
+* [npm](https://www.npmjs.com/)
+* [webpack](https://webpack.github.io/)
+* [ganache-cli](https://github.com/trufflesuite/ganache-cli) = v6.0.3 (ganache-core: 2.0.2) for local use
 
 ### Installation
 
-- Run `npm`
+* Run `npm`
 
 ### Running test
 
-- Run `ganache-cli -a 300` in one console
-- Generate test public/secret key
+* Run `ganache-cli -a 300` in one console
+* Generate test public/secret key
 
 ```
 cd tmp/
@@ -111,7 +107,7 @@ openssl genrsa 2048 > test_private.key
 openssl rsa -pubout < test_private.key > test_public.key
 ```
 
-- Run `npm run test`
+* Run `npm run test`
 
 ### Running test coverage
 
@@ -121,17 +117,17 @@ openssl rsa -pubout < test_private.key > test_public.key
 
 ### Running locally
 
-- Run local node (geth, ganache test rpc, etc)
-- Run `./node_modules/.bin/truffle migrate --network development`
-- Run `npm run dev`
-- Open `http://localhost:8080`
+* Run local node (geth, ganache test rpc, etc)
+* Run `./node_modules/.bin/truffle migrate --network development`
+* Run `npm run dev`
+* Open `http://localhost:8080`
 
 NOTE: If you have metamask, your account on ganache will not have ether to register. Either send it via terminal, or open the browser in the incognite mode, so you use default account on local node.
 
 ### Building asset files to deploy
 
-- Run `npm run build`
-- Upload the content of files under `build` directory
+* Run `npm run build`
+* Upload the content of files under `build` directory
 
 ### Encryption (experimental)
 
@@ -156,4 +152,3 @@ For `ropsten` and `mainnet` it now deploys via Infura. Pass the extra to set dep
 ```
 
 NOTE: `ropsten` and `mainnet` uses different gasPrice. Check `truffle.js` file and `scripts/util/set_gas.js` for the detail.
-
