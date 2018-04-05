@@ -16,9 +16,11 @@ try {
   );
   MAIN_NET_PARAMS.provider = new WalletProvider(
     privateKey,
-    'https://infura.io/',
+    'https://mainnet.infura.io/',
   );
-} catch (e) {}
+} catch (e) {
+  /**/
+}
 
 module.exports = {
   networks: {
