@@ -1,180 +1,210 @@
 pragma solidity ^0.4.19;
 
-import './GroupAdmin.sol';
-import './zeppelin/lifecycle/Destructible.sol';
+import "./GroupAdmin.sol";
+import "./zeppelin/lifecycle/Destructible.sol";
+
 
 contract Conference is Destructible, GroupAdmin {
-	string public name;
-	uint256 public deposit;
-	uint public limitOfParticipants;
-	uint public registered;
-	uint public attended;
-	bool public ended;
-	bool public cancelled;
-	uint public endedAt;
-	uint public coolingPeriod;
-	uint256 public payoutAmount;
-	string public encryption;
 
-	mapping (address => Participant) public participants;
-	mapping (uint => address) public participantsIndex;
-	bool paid;
+    ////////////////////////////////////////////////////////////////////////////
+    // Attributes
+    ////////////////////////////////////////////////////////////////////////////
 
-	struct Participant {
-		string participantName;
-		address addr;
-		bool attended;
-		bool paid;
-	}
+    string public name;
+    uint256 public deposit;
+    uint public limitOfParticipants;
+    uint public registered;
+    uint public attended;
+    bool public ended;
+    bool public cancelled;
+    uint public endedAt;
+    uint public coolingPeriod;
+    uint256 public payoutAmount;
+    string public encryption;
 
-	event RegisterEvent(address addr, string participantName, string _encryption);
-	event AttendEvent(address addr);
-	event PaybackEvent(uint256 _payout);
-	event WithdrawEvent(address addr, uint256 _payout);
-	event CancelEvent();
-	event ClearEvent(address addr, uint256 leftOver);
+    mapping (address => Participant) public participants;
+    mapping (uint => address) public participantsIndex;
+    bool private paid;
 
-	/* Modifiers */
-	modifier onlyActive {
-		require(!ended);
-		_;
-	}
+    ////////////////////////////////////////////////////////////////////////////
+    // Structs
+    ////////////////////////////////////////////////////////////////////////////
 
-	modifier onlyEnded {
-		require(ended);
-		_;
-	}
+    struct Participant {
+        string participantName;
+        address addr;
+        bool attended;
+        bool paid;
+    }
 
-	/* Public functions */
+    ////////////////////////////////////////////////////////////////////////////
+    // Events
+    ////////////////////////////////////////////////////////////////////////////
 
-	function Conference (
-		string _name,
-		uint256 _deposit,
-		uint _limitOfParticipants,
-		uint _coolingPeriod,
-		string _encryption
-	) public {
-		if(bytes(_name).length != 0){
-			name = _name;
-		}else{
-			name = 'Test';
-		}
+    event RegisterEvent(
+        address addr,
+        string participantName,
+        string _encryption
+    );
+    event AttendEvent(address addr);
+    event PaybackEvent(uint256 _payout);
+    event WithdrawEvent(address addr, uint256 _payout);
+    event CancelEvent();
+    event ClearEvent(address addr, uint256 leftOver);
 
-		if(_deposit != 0){
-			deposit = _deposit;
-		}else{
-			deposit = 0.02 ether;
-		}
+    ////////////////////////////////////////////////////////////////////////////
+    // Modifiers
+    ////////////////////////////////////////////////////////////////////////////
 
-		if(_limitOfParticipants !=0){
-			limitOfParticipants = _limitOfParticipants;
-		}else{
-			limitOfParticipants = 20;
-		}
+    modifier onlyActive {
+        require(!ended);
+        _;
+    }
 
-		if (_coolingPeriod != 0) {
-			coolingPeriod = _coolingPeriod;
-		} else {
-			coolingPeriod = 1 weeks;
-		}
+    modifier onlyEnded {
+        require(ended);
+        _;
+    }
 
-		if (bytes(_encryption).length != 0) {
-			encryption = _encryption;
-		}
-	}
+    ////////////////////////////////////////////////////////////////////////////
+    // External functions
+    ////////////////////////////////////////////////////////////////////////////
 
-	function registerWithEncryption(string _participant, string _encrypted) external payable onlyActive{
-		registerInternal(_participant);
-		RegisterEvent(msg.sender, _participant, _encrypted);
-	}
+    function Conference (
+        string _name,
+        uint256 _deposit,
+        uint _limitOfParticipants,
+        uint _coolingPeriod,
+        string _encryption
+    ) public {
+        if (bytes(_name).length != 0) {
+            name = _name;
+        } else {
+            name = "Test";
+        }
 
-	function register(string _participant) external payable onlyActive{
-		registerInternal(_participant);
-		RegisterEvent(msg.sender, _participant, '');
-	}
+        if (_deposit != 0) {
+            deposit = _deposit;
+        } else {
+            deposit = 0.02 ether;
+        }
 
-	function registerInternal(string _participant) internal {
-		require(msg.value == deposit);
-		require(registered < limitOfParticipants);
-		require(!isRegistered(msg.sender));
+        if (_limitOfParticipants != 0) {
+            limitOfParticipants = _limitOfParticipants;
+        } else {
+            limitOfParticipants = 20;
+        }
 
-		registered++;
-		participantsIndex[registered] = msg.sender;
-		participants[msg.sender] = Participant(_participant, msg.sender, false, false);
-	}
+        if (_coolingPeriod != 0) {
+            coolingPeriod = _coolingPeriod;
+        } else {
+            coolingPeriod = 1 weeks;
+        }
 
-	function withdraw() external onlyEnded{
-		require(payoutAmount > 0);
-		Participant participant = participants[msg.sender];
-		require(participant.addr == msg.sender);
-		require(cancelled || participant.attended);
-		require(participant.paid == false);
+        if (bytes(_encryption).length != 0) {
+            encryption = _encryption;
+        }
+    }
 
-		participant.paid = true;
-		participant.addr.transfer(payoutAmount);
-		WithdrawEvent(msg.sender, payoutAmount);
-	}
+    function registerWithEncryption(string _participant, string _encrypted)
+    external payable onlyActive {
+        registerInternal(_participant);
+        RegisterEvent(msg.sender, _participant, _encrypted);
+    }
 
-	/* Constants */
-	function totalBalance() constant public returns (uint256){
-		return this.balance;
-	}
+    function register(string _participant) external payable onlyActive {
+        registerInternal(_participant);
+        RegisterEvent(msg.sender, _participant, "");
+    }
 
-	function isRegistered(address _addr) constant public returns (bool){
-		return participants[_addr].addr != address(0);
-	}
+    function withdraw() external onlyEnded {
+        require(payoutAmount > 0);
+        Participant storage participant = participants[msg.sender];
+        require(participant.addr == msg.sender);
+        require(cancelled || participant.attended);
+        require(participant.paid == false);
 
-	function isAttended(address _addr) constant public returns (bool){
-		return isRegistered(_addr) && participants[_addr].attended;
-	}
+        participant.paid = true;
+        participant.addr.transfer(payoutAmount);
+        WithdrawEvent(msg.sender, payoutAmount);
+    }
 
-	function isPaid(address _addr) constant public returns (bool){
-		return isRegistered(_addr) && participants[_addr].paid;
-	}
+    function payback() external onlyOwner onlyActive {
+        payoutAmount = payout();
+        ended = true;
+        endedAt = now;
+        PaybackEvent(payoutAmount);
+    }
 
-	function payout() constant public returns(uint256){
-		if (attended == 0) return 0;
-		return uint(totalBalance()) / uint(attended);
-	}
+    function cancel() external onlyOwner onlyActive {
+        payoutAmount = deposit;
+        cancelled = true;
+        ended = true;
+        endedAt = now;
+        CancelEvent();
+    }
 
-	/* Admin only functions */
+    function clear() external onlyOwner onlyEnded {
+        require(now > endedAt + coolingPeriod);
+        require(ended);
+        uint256 leftOver = totalBalance();
+        owner.transfer(leftOver);
+        ClearEvent(owner, leftOver);
+    }
 
-	function payback() external onlyOwner onlyActive{
-		payoutAmount = payout();
-		ended = true;
-		endedAt = now;
-		PaybackEvent(payoutAmount);
-	}
+    function setLimitOfParticipants(uint _limitOfParticipants)
+    external onlyOwner onlyActive {
+        limitOfParticipants = _limitOfParticipants;
+    }
 
-	function cancel() external onlyOwner onlyActive{
-		payoutAmount = deposit;
-		cancelled = true;
-		ended = true;
-		endedAt = now;
-		CancelEvent();
-	}
+    function attend(address[] _addresses) external onlyAdmin onlyActive {
+        for (uint i = 0; i < _addresses.length; i++) {
+            address _addr = _addresses[i];
+            require(isRegistered(_addr));
+            require(!isAttended(_addr));
+            AttendEvent(_addr);
+            participants[_addr].attended = true;
+            attended++;
+        }
+    }
 
-	/* return the remaining of balance if there are any unclaimed after cooling period */
-	function clear() external onlyOwner onlyEnded{
-		require(now > endedAt + coolingPeriod);
-		require(ended);
-		var leftOver = totalBalance();
-		owner.transfer(leftOver);
-		ClearEvent(owner, leftOver);
-	}
+    ////////////////////////////////////////////////////////////////////////////
+    // Public functions
+    ////////////////////////////////////////////////////////////////////////////
 
-	function setLimitOfParticipants(uint _limitOfParticipants) external onlyOwner onlyActive{
-		limitOfParticipants = _limitOfParticipants;
-	}
+    function totalBalance() public constant returns (uint256) {
+        return address(this).balance;
+    }
 
-	function attend(address[] _addresses) external onlyAdmin onlyActive{
-		for(uint i=0;i<_addresses.length;i++){
-			var _addr = _addresses[i];
-			require(isRegistered(_addr));
-			require(!isAttended(_addr));
-			AttendEvent(_addr);
-			participants[_addr].attended = true;
-			attended++;
-		}
-	}
+    function isRegistered(address _addr) public constant returns (bool) {
+        return participants[_addr].addr != address(0);
+    }
+
+    function isAttended(address _addr) public constant returns (bool) {
+        return isRegistered(_addr) && participants[_addr].attended;
+    }
+
+    function isPaid(address _addr) public constant returns (bool) {
+        return isRegistered(_addr) && participants[_addr].paid;
+    }
+
+    function payout() public constant returns(uint256) {
+        if (attended == 0) return 0;
+        return uint(totalBalance()) / uint(attended);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // internal functions
+    ////////////////////////////////////////////////////////////////////////////
+
+    function registerInternal(string _participant) internal {
+        require(msg.value == deposit);
+        require(registered < limitOfParticipants);
+        require(!isRegistered(msg.sender));
+
+        registered++;
+        participantsIndex[registered] = msg.sender;
+        participants[msg.sender] =
+            Participant(_participant, msg.sender, false, false);
+    }
 }
