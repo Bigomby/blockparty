@@ -78,29 +78,15 @@ contract Conference is Destructible, GroupAdmin {
         uint _coolingPeriod,
         string _encryption
     ) public {
-        if (bytes(_name).length != 0) {
-            name = _name;
-        } else {
-            name = "Test";
-        }
+        require(bytes(_name).length > 0);
+        require(_deposit != 0);
+        require(_limitOfParticipants != 0);
+        require(_coolingPeriod != 0);
 
-        if (_deposit != 0) {
-            deposit = _deposit;
-        } else {
-            deposit = 0.02 ether;
-        }
-
-        if (_limitOfParticipants != 0) {
-            limitOfParticipants = _limitOfParticipants;
-        } else {
-            limitOfParticipants = 20;
-        }
-
-        if (_coolingPeriod != 0) {
-            coolingPeriod = _coolingPeriod;
-        } else {
-            coolingPeriod = 1 weeks;
-        }
+        name = _name;
+        deposit = _deposit;
+        limitOfParticipants = _limitOfParticipants;
+        coolingPeriod = _coolingPeriod;
 
         if (bytes(_encryption).length != 0) {
             encryption = _encryption;
