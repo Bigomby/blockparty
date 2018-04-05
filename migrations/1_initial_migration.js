@@ -1,5 +1,3 @@
-var Migrations = artifacts.require("./Migrations.sol");
+/*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
 
-module.exports = function(deployer) {
-  // deployer.deploy(Migrations);
-};
+module.exports = function(__) {};
